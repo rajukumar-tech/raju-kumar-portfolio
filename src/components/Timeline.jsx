@@ -7,12 +7,17 @@ export const Timeline = ({ data }) => {
   const containerRef = useRef(null);
   const [height, setHeight] = useState(0);
 
+  // Re-measure whenever the list resizes (fonts loading, window resize).
+  // Measuring only once left a stale, too-tall line that stretched the page.
   useEffect(() => {
-    if (ref.current) {
-      const rect = ref.current.getBoundingClientRect();
-      setHeight(rect.height);
-    }
-  }, [ref]);
+    const el = ref.current;
+    if (!el) return;
+    const update = () => setHeight(el.getBoundingClientRect().height);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
